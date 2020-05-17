@@ -14,5 +14,6 @@
     }
 ,
 "typescript.tsdk": "./node_modules/typescript/lib",
-"debug.node.autoAttach": "on"
+"debug.node.autoAttach": "on",
+"deno.enable": true
 }

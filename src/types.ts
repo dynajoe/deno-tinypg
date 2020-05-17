@@ -1,6 +1,4 @@
-import { EventEmitter } from 'events'
-import { TinyPgErrorTransformer } from './errors'
-import { TlsOptions } from 'tls'
+import { TinyPgErrorTransformer } from './errors.ts'
 
 export type HookCollection = { [P in keyof Required<TinyHooks>]: TinyHooks[P][] }
 
@@ -52,7 +50,6 @@ export interface HookSetWithContext {
 
 export interface TinyPgOptions {
    connection_string?: string
-   tls_options?: TlsOptions
    root_dir?: string | string[]
    use_prepared_statements?: boolean
    error_transformer?: TinyPgErrorTransformer
@@ -69,9 +66,9 @@ export interface TinyPgOptions {
    }
 }
 
-export type TinyPgPrimitive = string | number | boolean | object | Buffer | Date
+export type TinyPgPrimitive = string | number | boolean | object | Date
 
-export type TinyPgParams = undefined | null | object | { [key: string]: null | undefined | TinyPgPrimitive | TinyPgPrimitive[] }
+export type TinyPgParams = { [key: string]: null | undefined | TinyPgPrimitive | TinyPgPrimitive[] }
 
 export interface Result<T extends object> {
    rows: T[]
@@ -84,7 +81,7 @@ export interface QueryBeginContext {
    sql: string
    start: number
    name: string
-   params: TinyPgParams
+   params?: TinyPgParams
 }
 
 export interface QuerySubmitContext extends QueryBeginContext {
@@ -127,18 +124,4 @@ export interface DbCallConfig {
    parameterized_query: string
    text: string
    prepared: boolean
-}
-
-export interface Disposable {
-   dispose(): void
-}
-
-export interface TinyPgEvents extends EventEmitter {
-   on(event: 'query', listener: (x: QueryBeginContext) => void): this
-
-   on(event: 'result', listener: (x: QueryCompleteContext) => void): this
-
-   on(event: 'submit', listener: (x: QuerySubmitContext) => void): this
-
-   emit(event: 'query' | 'submit' | 'result', ...args: any[]): boolean
 }
