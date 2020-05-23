@@ -2,6 +2,7 @@ import {
   assertEquals,
   assertStrContains,
   assertThrowsAsync,
+  AssertionError,
 } from "https://deno.land/std/testing/asserts.ts";
 import * as H from "./helper.ts";
 import { tinyTest, tinyTestWithOptions } from "./helper.ts";
@@ -102,13 +103,12 @@ tinyTestWithOptions(
       });
     };
 
-    assertThrowsAsync(
-      async () => {
-        await thisShouldBeInStack();
-      },
-      TinyPgError,
-      "thisShouldBeInStack",
-    );
+    try {
+      await thisShouldBeInStack();
+      throw new AssertionError("SHOULD HAVE THROWN");
+    } catch (e) {
+      assertStrContains(e.stack, "thisShouldBeInStack");
+    }
   },
 );
 
@@ -139,41 +139,27 @@ tinyTest(
 tinyTest(
   "Nested Transactions - should rollback on a failed inner transaction",
   async (db) => {
-    await db
-      .transaction(async (ctx) => {
-        await ctx.query("INSERT INTO __tiny_test_db.a (text) VALUES (:text)", {
-          text: "1",
-        });
-
-        await ctx.transaction(async (ctx2) => {
-          await ctx2.query(
+    await assertThrowsAsync(async () => {
+      await db
+        .transaction(async (ctx) => {
+          await ctx.query(
             "INSERT INTO __tiny_test_db.a (text) VALUES (:text)",
             {
               text: "1",
             },
           );
-        });
-      });
 
+          await ctx.transaction(async (ctx2) => {
+            await ctx2.query(
+              "INSERT INTO __tiny_test_db.a (text) VALUES (:text)",
+              {
+                text: "1",
+              },
+            );
+          });
+        });
+    }, TinyPgError);
     const res = await H.getA();
     assertEquals(res.rows.length, 0);
-  },
-);
-
-tinyTest(
-  "Nested Transactions - should require thennable from transaction function",
-  async (db) => {
-    assertThrowsAsync(
-      async () => {
-        await db
-          .transaction(
-            <any> (() => {
-              return null;
-            }),
-          );
-      },
-      TinyPgError,
-      "thennable",
-    );
   },
 );

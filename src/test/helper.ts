@@ -44,7 +44,7 @@ export async function dbQuery(
     }
     return await client.query(query);
   } finally {
-    void client.end();
+    await client.end();
   }
 }
 
