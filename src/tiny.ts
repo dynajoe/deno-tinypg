@@ -1,5 +1,5 @@
-import * as Pg from "https://deno.land/x/postgres/mod.ts";
-import { PoolClient } from "https://deno.land/x/postgres/client.ts";
+import * as Pg from "../../deno-postgres/mod.ts";
+import { PoolClient } from "../../deno-postgres/client.ts";
 import * as Uuid from "https://deno.land/std/uuid/mod.ts";
 import * as Hash from "https://deno.land/std/hash/sha1.ts";
 import Debug from "https://deno.land/x/debuglog/debug.ts";
@@ -67,19 +67,22 @@ export class TinyPg {
     const config_from_url = parseConnectionConfigFromUrlOrDefault(
       options.connection_string,
     );
-    console.log(config_from_url);
 
-    this.pool = new Pg.Pool({
-      ...config_from_url,
-      keepAlive: pool_options.keep_alive,
-      connectionTimeoutMillis: pool_options.connection_timeout_ms,
-      idleTimeoutMillis: pool_options.idle_timeout_ms,
-      application_name: pool_options.application_name,
-      statement_timeout: pool_options.statement_timeout_ms,
-      max: pool_options.max,
-      min: pool_options.min,
-      log: Debug("tinypg:pool"),
-    }, 10);
+    this.pool = new Pg.Pool(
+      {
+        ...config_from_url,
+        keepAlive: pool_options.keep_alive,
+        connectionTimeoutMillis: pool_options.connection_timeout_ms,
+        idleTimeoutMillis: pool_options.idle_timeout_ms,
+        application_name: pool_options.application_name,
+        statement_timeout: pool_options.statement_timeout_ms,
+        max: pool_options.max,
+        min: pool_options.min,
+        log: Debug("tinypg:pool"),
+      },
+      1,
+      false,
+    );
 
     const paths =
       (Array.isArray(options.root_dir) ? options.root_dir : [options.root_dir!])

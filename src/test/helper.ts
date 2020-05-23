@@ -3,10 +3,34 @@ import { Client } from "https://deno.land/x/postgres/client.ts";
 import { QueryResult } from "https://deno.land/x/postgres/query.ts";
 import { __ } from "https://deno.land/x/dirname/mod.ts";
 const { __dirname } = __(import.meta);
+import * as H from "./helper.ts";
+const { test } = Deno;
 
 export const connection_string =
   "postgres://postgres:postgres@localhost:5432/tinypg_test?sslmode=disable";
 
+export async function tinyTest(
+  name: string,
+  fn: (db: TinyPg) => Promise<void>,
+) {
+  return tinyTestWithOptions(name, {}, fn);
+}
+
+export async function tinyTestWithOptions(
+  name: string,
+  options: Partial<TinyPgOptions>,
+  fn: (db: TinyPg) => Promise<void>,
+) {
+  return test(name, async () => {
+    const tiny = H.newTiny(options);
+    try {
+      await H.setUpDb();
+      await fn(tiny);
+    } finally {
+      await tiny.close();
+    }
+  });
+}
 export async function dbQuery(
   query: string,
   args: any[] = [],
